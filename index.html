@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Birthday Surprise</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      overflow: hidden;
+    }
+
+    .section {
+      display: none;
+      width: 100vw;
+      height: 100vh;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .active {
+      display: flex;
+    }
+
+    /* Layer 1: Gift Box */
+    #layer1 {
+      background: url('fimages/background3.jpg') no-repeat center center fixed;
+      background-size: cover;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    #gift-box {
+      width: 300px;
+      cursor: pointer;
+      animation: pulse 2s infinite;
+    }
+
+    #click-text {
+      color: #ff1493;
+      margin-top: 1rem;
+      font-size: 1.2rem;
+      animation: blink 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* Layer 2: Cat Maze */
+    #layer2 {
+      background: linear-gradient(to bottom right, #fce4ec, #f8bbd0);
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    #game-container {
+      background-color: #ecf9ec;
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .title {
+      font-size: 2rem;
+      margin-bottom: 20px;
+      color: #2e4600;
+      font-family: 'Pacifico', cursive;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(6, 60px);
+      grid-template-rows: repeat(6, 60px);
+      gap: 6px;
+    }
+
+    .cell {
+      width: 60px;
+      height: 60px;
+      background-color: #d6f5d6;
+      border-radius: 10px;
+      font-size: 1.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .trap {
+      background-color: #ffe6e6;
+    }
+
+    .goal {
+      background-color: #fff176;
+    }
+
+    .cat-cell {
+      background-color: #f8bbd0 !important;
+    }
+
+    .cat {
+      font-size: 1.8rem;
+    }
+
+    #message {
+      margin-top: 20px;
+      font-size: 1.3rem;
+      color: #4a004e;
+      display: none;
+    }
+
+    /* Layer 3: Final Birthday */
+    #layer3 {
+      background: #ffe6f0;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      overflow: visible;
+    }
+
+    .birthday-text {
+      width: 380px;
+      animation: textPop 1s ease-out forwards;
+      z-index: 2;
+    }
+
+    .main-cake {
+      width: 350px;
+      position: relative;
+      top: 30px;
+      animation: popCake 1.2s ease-out forwards;
+      z-index: 2;
+    }
+
+    @keyframes textPop {
+      0% { transform: scale(0); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes popCake {
+      0% { transform: scale(0); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .floaty {
+      position: fixed;
+      width: 50px;
+      height: 50px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      bottom: 0;
+      z-index: 1;
+      animation: floatUp 5s linear forwards;
+    }
+
+    @keyframes floatUp {
+      0%   { opacity: 0; bottom: 0; transform: scale(0.8); }
+      30%  { opacity: 1; transform: scale(1 ); }
+      80%  { opacity: 1; transform: scale(1.1); }
+      100% { opacity: 0; bottom: 90vh; transform: scale(1.2); }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Layer 1 -->
+  <div id="layer1" class="section active">
+    <img id="gift-box" src="fimages/giftbox.png" alt="Gift Box">
+    <div id="click-text"> </div>
+  </div>
+
+  <!-- Layer 2 -->
+  <div id="layer2" class="section">
+    <div id="game-container">
+      <div class="title">Help the Cat Reach the Yarn 🧶</div>
+      <div id="maze" class="grid"></div>
+      <div id="message"></div>
+    </div>
+  </div>
+
+  <!-- Layer 3 -->
+  <div id="layer3" class="section">
+    <img class="birthday-text" src="fimages/text1.png" alt="Happy Birthday Text" />
+    <img class="main-cake" src="fimages/cake9.png" alt="Birthday Cake" />
+  </div>
+
+  <script>
+    // Transition: Layer 1 → Layer 2
+    document.getElementById('gift-box').addEventListener('click', () => {
+      document.getElementById('layer1').classList.remove('active');
+      document.getElementById('layer2').classList.add('active');
+    });
+
+    // Cat Maze
+    const maze = document.getElementById('maze');
+    const message = document.getElementById('message');
+    let catPos = { x: 0, y: 0 };
+    const gridSize = 6;
+    let gridData = [];
+
+    function generateGridData() {
+      const grid = Array.from({ length: gridSize }, () => Array(gridSize).fill(''));
+      grid[0][0] = 'cat';
+      grid[5][5] = 'goal';
+
+      let traps = 10;
+      while (traps > 0) {
+        let x = Math.floor(Math.random() * gridSize);
+        let y = Math.floor(Math.random() * gridSize);
+        if (grid[y][x] === '' && !(x === 0 && y === 0) && !(x === 5 && y === 5)) {
+          grid[y][x] = 'trap';
+          traps--;
+        }
+      }
+      return grid;
+    }
+
+    function renderGrid() {
+      gridData = generateGridData();
+      maze.innerHTML = '';
+      for (let y = 0; y < gridSize; y++) {
+        for (let x = 0; x < gridSize; x++) {
+          const cell = document.createElement('div');
+          cell.classList.add('cell');
+          const content = gridData[y][x];
+          if (x === catPos.x && y === catPos.y) {
+            cell.classList.add('cat-cell');
+            const cat = document.createElement('div');
+            cat.classList.add('cat');
+            cat.textContent = '🐱';
+            cell.appendChild(cat);
+          } else if (content === 'trap') {
+            cell.classList.add('trap');
+            cell.textContent = Math.random() > 0.5 ? '🐍' : '🐶';
+          } else if (content === 'goal') {
+            cell.classList.add('goal');
+            cell.textContent = '🧶';
+          }
+          maze.appendChild(cell);
+        }
+      }
+    }
+
+    function moveCat(dx, dy) {
+      const newX = catPos.x + dx;
+      const newY = catPos.y + dy;
+      if (newX < 0 || newY < 0 || newX >= gridSize || newY >= gridSize) return;
+      const dest = gridData[newY][newX];
+      if (dest === 'trap') {
+        catPos = { x: newX, y: newY };
+        renderGrid();
+        setTimeout(() => resetGame(true), 1000);
+        return;
+      }
+
+      catPos = { x: newX, y: newY };
+      renderGrid();
+
+      if (dest === 'goal') {
+        message.textContent = "Yay! You did it, Manya! 🐾";
+        message.style.display = 'block';
+        setTimeout(() => {
+          document.getElementById('layer2').classList.remove('active');
+          document.getElementById('layer3').classList.add('active');
+        }, 2000);
+      }
+    }
+
+    function resetGame(lost) {
+      catPos = { x: 0, y: 0 };
+      message.textContent = lost ? "Oh no! You got caught 😿 Try again!" : '';
+      message.style.display = lost ? 'block' : 'none';
+      renderGrid();
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (!document.getElementById('layer2').classList.contains('active')) return;
+      switch (e.key.toLowerCase()) {
+        case 'w': case 'arrowup': moveCat(0, -1); break;
+        case 's': case 'arrowdown': moveCat(0, 1); break;
+        case 'a': case 'arrowleft': moveCat(-1, 0); break;
+        case 'd': case 'arrowright': moveCat(1, 0); break;
+      }
+    });
+
+    renderGrid();
+
+    // FLOATING IMAGES
+    const floatImgs = [
+      'fimages/cake1.png','fimages/cake2.png','fimages/cake3.png',
+      'fimages/cake4.png','fimages/cake5.png','fimages/cake6.png',
+      'fimages/cake7.png','fimages/cake8.png','fimages/teddy1.png',
+      'fimages/teddy2.png','fimages/teddy3.png','fimages/teddy4.png',
+      'fimages/teddy5.png','fimages/teddy6.png','fimages/flower2.png',
+      'fimages/flower1.png','fimages/heart.png','fimages/Mheart1.png',
+      'fimages/Mheart2.png'
+    ];
+
+    function createFloaty() {
+      const floaty = document.createElement('div');
+      floaty.className = 'floaty';
+      floaty.style.left = Math.random() * 100 + 'vw';
+      floaty.style.backgroundImage = `url(${floatImgs[Math.floor(Math.random() * floatImgs.length)]})`;
+      document.body.appendChild(floaty);
+      setTimeout(() => floaty.remove(), 20000);
+    }
+
+    setInterval(() => {
+      if (document.getElementById('layer3').classList.contains('active')) {
+        createFloaty();
+      }
+    }, 100);
+  </script>
+</body>
+</html>
