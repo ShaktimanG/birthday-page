@@ -304,6 +304,32 @@
 
     renderGrid();
 
+    let touchStartX = 0, touchStartY = 0;
+
+  document.addEventListener('touchstart', (e) => {
+    if (!document.getElementById('layer2').classList.contains('active')) return;
+    const touch = e.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+  }, { passive: true });
+
+  document.addEventListener('touchend', (e) => {
+    if (!document.getElementById('layer2').classList.contains('active')) return;
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - touchStartX;
+    const dy = touch.clientY - touchStartY;
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+      // Horizontal swipe
+      if (dx > 30) moveCat(1, 0);     // Swipe right
+      else if (dx < -30) moveCat(-1, 0); // Swipe left
+    } else {
+      // Vertical swipe
+      if (dy > 30) moveCat(0, 1);     // Swipe down
+      else if (dy < -30) moveCat(0, -1); // Swipe up
+    }
+  }, { passive: true });
+
     // FLOATING IMAGES
     const floatImgs = [
       'fimages/cake1.png','fimages/cake2.png','fimages/cake3.png',
